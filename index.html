@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<!-- saved from url=(0533)https://d1ysz50cxb9zwl.cloudfront.net/B_-wCotPMLc7CiKCSW2eE931CJNjA7P0xvy_YxlqTbzSfpS5jBIvE9yckjw3HCM_/by/4610376/as/file.html?Expires=1746462829&Signature=KMzvNjnyd8yWHKI8MgcgPC30Ms1bqMcQrssJ7dVTrKnsjhWyBv-5tAbAE5StXNEa7g2vLyO1-2tB1BiDs6HcZY8syyFoVMNJqQsCueTYlCTkFqsV3kNtDL5AjRCw0S68YE37vcb3C6o2E2~lCn9quHKNRQMTCNPyLxfkmXvCLe6LNLYMlt5IoOWpOwqWtVzL4vHzwSN31~tg2KdECk6Itk5V1HYlOReFUyQvjOV6EQqqIMuNzRgjA6xPoHNJKkT4x5zN9qvvxXnMRKgcBqmpx4MlYhGfaEGWZQvJIOHwRn6LaRztKCw8ifKvv7CdotUsafs8QeVU6peoKwfneg-FFw__&Key-Pair-Id=APKAJAERRT46LD6FN4NA -->
+<html lang="en">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Progress Bar Experiment</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
+    <script>
+        class ProgressBar {
+            constructor(totalTime, barLength = 300, showPercentage = false) {
+                this.totalTime = totalTime * 1000; // Convert to milliseconds
+                this.barLength = barLength;
+                this.showPercentage = showPercentage;
+                this.startTime = null;
+            }
+
+            start() {
+                this.startTime = millis();
+            }
+
+            calculateProgress() {
+                const elapsedTime = millis() - this.startTime;
+                return min(elapsedTime / this.totalTime, 1.0);
+            }
+
+            display(progress) {
+                throw new Error("Subclasses must implement the display method.");
+            }
+
+            renderBar(progress, eased = false) {
+                progress = eased ? sqrt(progress) : progress; // Apply easing if needed
+                const filledLength = this.barLength * progress;
+
+                // Draw the background bar
+                fill(200);
+                rectMode(CENTER);
+                rect(width / 2, height / 2, this.barLength, 30);
+
+                // Draw the filled portion
+                fill(100, 200, 100);
+                rectMode(CORNER);
+                rect(width / 2 - this.barLength / 2, height / 2 - 15, filledLength, 30);
+                this.writeOutput(filledLength);
+            }
+
+            writeOutput(filledLength) {
+                let label;
+                if (this.showPercentage) {
+                    const progress = filledLength / this.barLength;
+                    label = `${(progress * 100).toFixed(1)}%`;
+                } else {
+                    const remainingTime = (1 - filledLength / this.barLength) * this.totalTime / 1000;
+                    label = `${remainingTime.toFixed(1)}s`;
+                }
+                fill(255); // Set text color to white for contrast
+                textSize(16);
+                textAlign(RIGHT, CENTER);
+                const adjustedFilledLength = max(filledLength, 50);
+                const labelX = width / 2 - this.barLength / 2 + adjustedFilledLength - 5;
+                const labelY = height / 2;
+                text(label, labelX, labelY);
+            }
+        }
+
+        class LinearProgressBar extends ProgressBar {
+            display(progress) {
+                this.renderBar(progress);
+            }
+        }
+
+        class NonLinearProgressBar extends ProgressBar {
+            display(progress) {
+                this.renderBar(progress, true);
+            }
+        }
+
+        let linearBar, nonLinearBar;
+        let currentBar;
+        let experiment = 0;
+
+        function setup() {
+            createCanvas(800, 200);
+            linearBar = new LinearProgressBar(10, 500, true);
+            nonLinearBar = new NonLinearProgressBar(10, 500, true);
+            currentBar = linearBar;
+            currentBar.start();
+        }
+
+        function draw() {
+            background(240);
+            const progress = currentBar.calculateProgress();
+            currentBar.display(progress);
+
+            if (progress >= 1.0) {
+                if (experiment === 0) {
+                    experiment++;
+                    currentBar = nonLinearBar;
+                    currentBar.start();
+                } else {
+                    noLoop(); // Stop the draw loop after both experiments
+                }
+            }
+        }
+
+    </script>
+</head>
+
+<body>
+
+    <main><canvas id="defaultCanvas0" class="p5Canvas" style="width: 800px; height: 200px;" width="800"
+            height="200"></canvas></main>
+</body>
+
+</html>
