@@ -1,5 +1,7 @@
 # Progress Bar Engagement Prototype
 
+[Demo](https://superdave2u.github.io/progress-bar-experiment/)
+
 ## Purpose
 This prototype compares **two types of progress bar fill rates** to explore potential differences in user engagement:
 - **Linear fill rate**: progress increases uniformly over time.
