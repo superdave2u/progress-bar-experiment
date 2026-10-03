@@ -1,19 +1,222 @@
 <!DOCTYPE html>
-<!-- saved from url=(0533)https://d1ysz50cxb9zwl.cloudfront.net/B_-wCotPMLc7CiKCSW2eE931CJNjA7P0xvy_YxlqTbzSfpS5jBIvE9yckjw3HCM_/by/4610376/as/file.html?Expires=1746462829&Signature=KMzvNjnyd8yWHKI8MgcgPC30Ms1bqMcQrssJ7dVTrKnsjhWyBv-5tAbAE5StXNEa7g2vLyO1-2tB1BiDs6HcZY8syyFoVMNJqQsCueTYlCTkFqsV3kNtDL5AjRCw0S68YE37vcb3C6o2E2~lCn9quHKNRQMTCNPyLxfkmXvCLe6LNLYMlt5IoOWpOwqWtVzL4vHzwSN31~tg2KdECk6Itk5V1HYlOReFUyQvjOV6EQqqIMuNzRgjA6xPoHNJKkT4x5zN9qvvxXnMRKgcBqmpx4MlYhGfaEGWZQvJIOHwRn6LaRztKCw8ifKvv7CdotUsafs8QeVU6peoKwfneg-FFw__&Key-Pair-Id=APKAJAERRT46LD6FN4NA -->
 <html lang="en">
 
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Progress Bar Experiment</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
+    <style>
+        :root {
+            --ink: #24292f;
+            --muted: #57606a;
+            --line: #d0d7de;
+            --accent: #0969da;
+        }
+
+        body {
+            font-family: system-ui, sans-serif;
+            background: #f9fafb;
+            color: var(--ink);
+            margin: 0;
+            padding: 1rem;
+        }
+
+        main {
+            max-width: 860px;
+            margin: auto;
+            display: grid;
+            gap: 1rem;
+        }
+
+        .card {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+        }
+
+        h1 {
+            font-size: 1.25rem;
+            margin: 0;
+        }
+
+        .controls {
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .control-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .control-row label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--muted);
+        }
+
+        select,
+        input[type="number"] {
+            font: inherit;
+            padding: 0.35rem 0.5rem;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #fff;
+        }
+
+        input[type="number"] {
+            width: 4.5rem;
+        }
+
+        .bar-config {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+        }
+
+        .bar-config .bar-name {
+            font-weight: 600;
+            font-size: 0.875rem;
+            min-width: 5.5rem;
+        }
+
+        .bar-config .remove {
+            margin-left: auto;
+            border: 1px solid var(--line);
+            background: #fff;
+            border-radius: 6px;
+            padding: 0.25rem 0.6rem;
+            cursor: pointer;
+            color: #cf222e;
+        }
+
+        .bar-config .remove:hover {
+            background: #fff1f0;
+        }
+
+        button.run {
+            font: inherit;
+            font-weight: 600;
+            color: #fff;
+            background: var(--accent);
+            border: none;
+            border-radius: 8px;
+            padding: 0.6rem 1.4rem;
+            cursor: pointer;
+        }
+
+        button.run:hover {
+            background: #0550ae;
+        }
+
+        button.ghost {
+            font: inherit;
+            border: 1px solid var(--line);
+            background: #fff;
+            border-radius: 8px;
+            padding: 0.45rem 0.9rem;
+            cursor: pointer;
+        }
+
+        button.ghost:hover {
+            background: #f3f4f6;
+        }
+
+        #status {
+            font-size: 0.875rem;
+            color: var(--muted);
+            min-height: 1.25rem;
+        }
+
+        canvas {
+            border-radius: 8px;
+        }
+
+        .hint {
+            font-size: 0.8rem;
+            color: var(--muted);
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <main>
+        <div class="card">
+            <h1>Progress Bar Experiment</h1>
+            <p class="hint">
+                Compare fill options and fill rates. All bars are triggered by the same Run button —
+                in parallel (side by side) or sequentially (one after another).
+            </p>
+        </div>
+
+        <div class="card controls" aria-label="Experiment controls">
+            <div class="control-row">
+                <label for="mode">Mode</label>
+                <select id="mode">
+                    <option value="parallel" selected>Parallel — side by side</option>
+                    <option value="sequential">Sequential — one after another</option>
+                </select>
+                <label for="label-style">Labels</label>
+                <select id="label-style">
+                    <option value="percent" selected>Percent</option>
+                    <option value="seconds">Seconds remaining</option>
+                </select>
+                <button type="button" class="ghost" id="add-bar">+ Add bar</button>
+                <button type="button" class="run" id="run-button">Run all</button>
+            </div>
+            <div id="bar-configs" class="controls"></div>
+            <p id="status" role="status" aria-live="polite"></p>
+        </div>
+
+        <div class="card">
+            <div id="canvas-host"></div>
+        </div>
+    </main>
+
     <script>
+        // ---- Fill options registry ----
+        // Each entry maps raw time progress (0..1) to displayed progress (0..1).
+        // Add a new fill option by adding one pure function here.
+        const EASINGS = Object.freeze({
+            linear: (p) => p,
+            easeOutSqrt: (p) => sqrt(p),
+            easeOutCubic: (p) => 1 - pow(1 - p, 3),
+            easeInOutCubic: (p) => (p < 0.5 ? 4 * p * p * p : 1 - pow(-2 * p + 2, 3) / 2),
+            easeInQuad: (p) => p * p,
+        });
+
+        const BAR_COLORS = ['#0969da', '#1a7f37', '#bf8700', '#8250df', '#cf222e', '#0969da'];
+
+        const LAYOUT = {
+            barLength: 500,
+            thickness: 36,
+            gap: 26,
+            top: 30,
+            margin: 40,
+        };
+
+        // ---- ProgressBar ----
+        // Strategy-based: the fill option (easing) is injected instead of subclassed,
+        // and every bar owns its layout so multiple bars can render independently.
         class ProgressBar {
-            constructor(totalTime, barLength = 300, showPercentage = false) {
-                this.totalTime = totalTime * 1000; // Convert to milliseconds
+            constructor({ easingKey = 'linear', duration = 10, barLength = LAYOUT.barLength, showPercentage = true, color = BAR_COLORS[0], x = LAYOUT.margin, y = LAYOUT.top } = {}) {
+                this.easing = EASINGS[easingKey] ? easingKey : 'linear';
+                this.durationMs = duration * 1000;
                 this.barLength = barLength;
+                this.thickness = LAYOUT.thickness;
                 this.showPercentage = showPercentage;
+                this.color = color;
+                this.x = x;
+                this.y = y;
                 this.startTime = null;
             }
 
@@ -21,97 +224,236 @@
                 this.startTime = millis();
             }
 
+            // Raw time-based progress, 0..1
             calculateProgress() {
+                if (this.startTime === null) return 0;
                 const elapsedTime = millis() - this.startTime;
-                return min(elapsedTime / this.totalTime, 1.0);
+                return min(elapsedTime / this.durationMs, 1.0);
             }
 
-            display(progress) {
-                throw new Error("Subclasses must implement the display method.");
+            // Displayed progress after the fill option is applied
+            easedProgress() {
+                return EASINGS[this.easing](this.calculateProgress());
             }
 
-            renderBar(progress, eased = false) {
-                progress = eased ? sqrt(progress) : progress; // Apply easing if needed
-                const filledLength = this.barLength * progress;
+            get finished() {
+                return this.startTime !== null && this.calculateProgress() >= 1.0;
+            }
 
-                // Draw the background bar
-                fill(200);
+            display() {
+                const displayed = this.easedProgress();
+                const filledLength = this.barLength * displayed;
+
+                fill(234, 238, 242);
                 rectMode(CENTER);
-                rect(width / 2, height / 2, this.barLength, 30);
+                rect(this.x + this.barLength / 2, this.y + this.thickness / 2, this.barLength, this.thickness, 8);
 
-                // Draw the filled portion
-                fill(100, 200, 100);
+                fill(this.color);
                 rectMode(CORNER);
-                rect(width / 2 - this.barLength / 2, height / 2 - 15, filledLength, 30);
+                rect(this.x, this.y, filledLength, this.thickness, 8);
+
                 this.writeOutput(filledLength);
+                return displayed;
             }
 
             writeOutput(filledLength) {
                 let label;
                 if (this.showPercentage) {
-                    const progress = filledLength / this.barLength;
-                    label = `${(progress * 100).toFixed(1)}%`;
+                    // Percent reflects the displayed (perceived) fill
+                    label = `${(filledLength / this.barLength * 100).toFixed(1)}%`;
                 } else {
-                    const remainingTime = (1 - filledLength / this.barLength) * this.totalTime / 1000;
-                    label = `${remainingTime.toFixed(1)}s`;
+                    // Seconds remaining reflect real elapsed time
+                    const remaining = max(0, (1 - this.calculateProgress()) * this.durationMs / 1000);
+                    label = `${remaining.toFixed(1)}s`;
                 }
-                fill(255); // Set text color to white for contrast
-                textSize(16);
+                fill(255);
+                noStroke();
+                textSize(15);
+                textStyle(BOLD);
                 textAlign(RIGHT, CENTER);
-                const adjustedFilledLength = max(filledLength, 50);
-                const labelX = width / 2 - this.barLength / 2 + adjustedFilledLength - 5;
-                const labelY = height / 2;
+                const labelX = this.x + max(filledLength, 50) - 8;
+                const labelY = this.y + this.thickness / 2;
                 text(label, labelX, labelY);
             }
         }
 
-        class LinearProgressBar extends ProgressBar {
-            display(progress) {
-                this.renderBar(progress);
+        // ---- Experiment state ----
+        let bars = [];
+        let runningIndex = 0;
+        let mode = 'parallel';
+        let experimentRunning = false;
+
+        // ---- URL parameters (shareable experiment links) ----
+        // ?mode=sequential&label=seconds&autorun=1&bars=linear:10,easeOutSqrt:10
+        function readUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('mode') === 'sequential') {
+                mode = 'sequential';
+                document.getElementById('mode').value = 'sequential';
             }
+            const barParam = params.get('bars');
+            if (barParam) {
+                const parsed = barParam.split(',').map((entry) => {
+                    const [easing, duration] = entry.split(':');
+                    return { easing: EASINGS[easing] ? easing : 'linear', duration: Number(duration) >= 1 ? min(Number(duration), 120) : 10 };
+                });
+                if (parsed.length > 0 && parsed.length <= BAR_COLORS.length) barConfigs = parsed;
+            }
+            if (params.get('label') === 'seconds') document.getElementById('label-style').value = 'seconds';
+            if (params.get('autorun') === '1') startExperiment();
         }
 
-        class NonLinearProgressBar extends ProgressBar {
-            display(progress) {
-                this.renderBar(progress, true);
-            }
+        // ---- DOM controls ----
+        const barConfigsHost = document.getElementById('bar-configs');
+        const statusHost = document.getElementById('status');
+        const runButton = document.getElementById('run-button');
+        const modeSelect = document.getElementById('mode');
+        const labelStyleSelect = document.getElementById('label-style');
+
+        let barConfigs = [
+            { easing: 'linear', duration: 10 },
+            { easing: 'easeOutSqrt', duration: 10 },
+        ];
+
+        function renderBarConfigs() {
+            barConfigsHost.innerHTML = '';
+            barConfigs.forEach((config, index) => {
+                const row = document.createElement('div');
+                row.className = 'bar-config';
+
+                const name = document.createElement('span');
+                name.className = 'bar-name';
+                name.textContent = `Bar ${index + 1}`;
+
+                const easingSelect = document.createElement('select');
+                Object.keys(EASINGS).forEach((key) => {
+                    const option = document.createElement('option');
+                    option.value = key;
+                    option.textContent = key;
+                    option.selected = key === config.easing;
+                    easingSelect.appendChild(option);
+                });
+                easingSelect.addEventListener('change', () => {
+                    config.easing = easingSelect.value;
+                });
+
+                const durationInput = document.createElement('input');
+                durationInput.type = 'number';
+                durationInput.min = '1';
+                durationInput.max = '120';
+                durationInput.value = String(config.duration);
+                durationInput.setAttribute('aria-label', `Duration for bar ${index + 1} in seconds`);
+                durationInput.addEventListener('change', () => {
+                    const value = Number(durationInput.value);
+                    config.duration = value >= 1 ? min(value, 120) : 10;
+                    durationInput.value = String(config.duration);
+                });
+
+                const durationLabel = document.createElement('label');
+                durationLabel.textContent = 's';
+                durationLabel.style.color = 'var(--muted)';
+                durationLabel.style.fontSize = '0.875rem';
+
+                const removeButton = document.createElement('button');
+                removeButton.type = 'button';
+                removeButton.className = 'remove';
+                removeButton.textContent = 'Remove';
+                removeButton.disabled = barConfigs.length <= 1;
+                removeButton.addEventListener('click', () => {
+                    barConfigs.splice(index, 1);
+                    renderBarConfigs();
+                });
+
+                row.append(name, easingSelect, durationInput, durationLabel, removeButton);
+                barConfigsHost.appendChild(row);
+            });
         }
 
-        let linearBar, nonLinearBar;
-        let currentBar;
-        let experiment = 0;
+        function layoutHeight() {
+            return LAYOUT.top + barConfigs.length * (LAYOUT.thickness + LAYOUT.gap) + 10;
+        }
 
+        function readControls() {
+            mode = modeSelect.value === 'sequential' ? 'sequential' : 'parallel';
+            const showPercentage = labelStyleSelect.value === 'percent';
+            bars = barConfigs.map((config, index) => new ProgressBar({
+                easingKey: config.easing,
+                duration: config.duration,
+                showPercentage,
+                color: BAR_COLORS[index % BAR_COLORS.length],
+                y: LAYOUT.top + index * (LAYOUT.thickness + LAYOUT.gap),
+            }));
+        }
+
+        function startExperiment() {
+            readControls();
+            runningIndex = 0;
+            experimentRunning = true;
+            runButton.textContent = 'Restart';
+            statusHost.textContent = '';
+            resizeCanvas(800, layoutHeight());
+            if (mode === 'parallel') {
+                bars.forEach((bar) => bar.start());
+            } else {
+                bars[0].start();
+            }
+            loop();
+        }
+
+        function finishExperiment() {
+            // Final displayed percent per bar — the perceived-progress summary
+            const summary = bars
+                .map((bar, index) => `Bar ${index + 1} (${bar.easing}): ${(bar.easedProgress() * 100).toFixed(1)}%`)
+                .join(' · ');
+            statusHost.textContent = `All bars complete — final displayed fills: ${summary}`;
+            noLoop();
+        }
+
+        runButton.addEventListener('click', startExperiment);
+        document.getElementById('add-bar').addEventListener('click', () => {
+            if (barConfigs.length >= BAR_COLORS.length) return;
+            barConfigs.push({ easing: 'linear', duration: 10 });
+            renderBarConfigs();
+        });
+        modeSelect.addEventListener('change', () => {
+            statusHost.textContent = 'Press Run to apply the new mode.';
+        });
+
+        // ---- p5 control flow ----
         function setup() {
-            createCanvas(800, 200);
-            linearBar = new LinearProgressBar(10, 500, true);
-            nonLinearBar = new NonLinearProgressBar(10, 500, true);
-            currentBar = linearBar;
-            currentBar.start();
+            const canvas = createCanvas(800, layoutHeight());
+            canvas.parent('canvas-host');
+            renderBarConfigs();
+            noLoop();
+            readUrlParams();
+            if (!experimentRunning) statusHost.textContent = 'Configure the bars, then press Run all.';
         }
 
         function draw() {
-            background(240);
-            const progress = currentBar.calculateProgress();
-            currentBar.display(progress);
+            background(248, 250, 252);
+            if (!experimentRunning) return;
 
-            if (progress >= 1.0) {
-                if (experiment === 0) {
-                    experiment++;
-                    currentBar = nonLinearBar;
-                    currentBar.start();
-                } else {
-                    noLoop(); // Stop the draw loop after both experiments
+            if (mode === 'parallel') {
+                bars.forEach((bar) => bar.display());
+                if (bars.every((bar) => bar.finished)) {
+                    experimentRunning = false;
+                    finishExperiment();
+                }
+            } else {
+                const currentBar = bars[runningIndex];
+                currentBar.display();
+                if (currentBar.finished) {
+                    if (runningIndex < bars.length - 1) {
+                        runningIndex++;
+                        bars[runningIndex].start();
+                    } else {
+                        experimentRunning = false;
+                        finishExperiment();
+                    }
                 }
             }
         }
-
     </script>
-</head>
-
-<body>
-
-    <main><canvas id="defaultCanvas0" class="p5Canvas" style="width: 800px; height: 200px;" width="800"
-            height="200"></canvas></main>
 </body>
 
 </html>
