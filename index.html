@@ -20,6 +20,8 @@
             color: var(--ink);
             margin: 0;
             padding: 1rem;
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
         }
 
         main {
@@ -152,9 +154,9 @@
             margin: 0;
         }
 
-        @media (max-width: 480px) {
+        @media (max-width: 600px) {
             body {
-                padding: 0.75rem;
+                padding: 0.75rem 0.75rem 5.5rem;
             }
 
             .card {
@@ -165,8 +167,20 @@
                 gap: 0.5rem;
             }
 
-            .control-row select {
-                min-width: 8.5rem;
+            .bar-config {
+                padding: 0.6rem 0.75rem;
+            }
+
+            /* Keep the primary action reachable while the bars run below the fold */
+            #run-button {
+                position: fixed;
+                left: 0.75rem;
+                right: 0.75rem;
+                bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+                width: auto;
+                padding: 0.9rem 1.6rem;
+                z-index: 20;
+                box-shadow: 0 6px 20px rgba(9, 105, 218, 0.35);
             }
         }
     </style>
