@@ -62,10 +62,11 @@
         select,
         input[type="number"] {
             font: inherit;
-            padding: 0.35rem 0.5rem;
+            padding: 0.45rem 0.55rem;
             border: 1px solid var(--line);
             border-radius: 8px;
             background: #fff;
+            touch-action: manipulation;
         }
 
         input[type="number"] {
@@ -93,9 +94,10 @@
             border: 1px solid var(--line);
             background: #fff;
             border-radius: 6px;
-            padding: 0.25rem 0.6rem;
+            padding: 0.45rem 0.8rem;
             cursor: pointer;
             color: #cf222e;
+            touch-action: manipulation;
         }
 
         .bar-config .remove:hover {
@@ -109,8 +111,9 @@
             background: var(--accent);
             border: none;
             border-radius: 8px;
-            padding: 0.6rem 1.4rem;
+            padding: 0.7rem 1.6rem;
             cursor: pointer;
+            touch-action: manipulation;
         }
 
         button.run:hover {
@@ -122,8 +125,9 @@
             border: 1px solid var(--line);
             background: #fff;
             border-radius: 8px;
-            padding: 0.45rem 0.9rem;
+            padding: 0.55rem 1rem;
             cursor: pointer;
+            touch-action: manipulation;
         }
 
         button.ghost:hover {
@@ -138,12 +142,32 @@
 
         canvas {
             border-radius: 8px;
+            max-width: 100%;
+            height: auto;
         }
 
         .hint {
             font-size: 0.8rem;
             color: var(--muted);
             margin: 0;
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 0.75rem;
+            }
+
+            .card {
+                padding: 0.85rem 1rem;
+            }
+
+            .control-row {
+                gap: 0.5rem;
+            }
+
+            .control-row select {
+                min-width: 8.5rem;
+            }
         }
     </style>
 </head>
@@ -188,21 +212,55 @@
         // Add a new fill option by adding one pure function here.
         const EASINGS = Object.freeze({
             linear: (p) => p,
-            easeOutSqrt: (p) => sqrt(p),
-            easeOutCubic: (p) => 1 - pow(1 - p, 3),
-            easeInOutCubic: (p) => (p < 0.5 ? 4 * p * p * p : 1 - pow(-2 * p + 2, 3) / 2),
+            easeOutSqrt: (p) => Math.sqrt(p),
+            easeOutCubic: (p) => 1 - Math.pow(1 - p, 3),
+            easeInOutCubic: (p) => (p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2),
             easeInQuad: (p) => p * p,
         });
 
         const BAR_COLORS = ['#0969da', '#1a7f37', '#bf8700', '#8250df', '#cf222e', '#0969da'];
 
-        const LAYOUT = {
-            barLength: 500,
-            thickness: 36,
-            gap: 26,
-            top: 30,
-            margin: 40,
-        };
+        // Layout is viewport-driven so the canvas fits phones, tablets, and desktops.
+        const CANVAS_MAX_WIDTH = 780;
+        let LAYOUT = computeLayout(780);
+
+        function canvasWidth() {
+            // Measure the card around the canvas (the host itself is pinned to the
+            // canvas's inline width, which would stop the canvas from ever shrinking).
+            const host = document.getElementById('canvas-host');
+            const card = host && host.parentElement;
+            let available = window.innerWidth ? window.innerWidth - 64 : 780;
+            if (card && card.clientWidth) {
+                const style = window.getComputedStyle ? window.getComputedStyle(card) : null;
+                const pad = style ? parseFloat(style.paddingLeft) + parseFloat(style.paddingRight) : 40;
+                available = card.clientWidth - pad;
+            }
+            return Math.max(240, Math.min(available, CANVAS_MAX_WIDTH));
+        }
+
+        function computeLayout(width) {
+            const margin = Math.min(40, Math.max(14, Math.round(width * 0.05)));
+            return {
+                barLength: width - margin * 2,
+                thickness: width < 480 ? 30 : 36,
+                gap: width < 480 ? 18 : 26,
+                top: width < 480 ? 24 : 30,
+                margin,
+            };
+        }
+
+        function refreshLayout() {
+            LAYOUT = computeLayout(canvasWidth());
+        }
+
+        function repositionBars() {
+            bars.forEach((bar, index) => {
+                bar.x = LAYOUT.margin;
+                bar.y = LAYOUT.top + index * (LAYOUT.thickness + LAYOUT.gap);
+                bar.barLength = LAYOUT.barLength;
+                bar.thickness = LAYOUT.thickness;
+            });
+        }
 
         // ---- ProgressBar ----
         // Strategy-based: the fill option (easing) is injected instead of subclassed,
@@ -228,7 +286,7 @@
             calculateProgress() {
                 if (this.startTime === null) return 0;
                 const elapsedTime = millis() - this.startTime;
-                return min(elapsedTime / this.durationMs, 1.0);
+                return Math.min(elapsedTime / this.durationMs, 1.0);
             }
 
             // Displayed progress after the fill option is applied
@@ -263,15 +321,15 @@
                     label = `${(filledLength / this.barLength * 100).toFixed(1)}%`;
                 } else {
                     // Seconds remaining reflect real elapsed time
-                    const remaining = max(0, (1 - this.calculateProgress()) * this.durationMs / 1000);
+                    const remaining = Math.max(0, (1 - this.calculateProgress()) * this.durationMs / 1000);
                     label = `${remaining.toFixed(1)}s`;
                 }
                 fill(255);
                 noStroke();
-                textSize(15);
+                textSize(Math.max(12, Math.round(this.thickness * 0.42)));
                 textStyle(BOLD);
                 textAlign(RIGHT, CENTER);
-                const labelX = this.x + max(filledLength, 50) - 8;
+                const labelX = this.x + Math.max(filledLength, 50) - 8;
                 const labelY = this.y + this.thickness / 2;
                 text(label, labelX, labelY);
             }
@@ -295,7 +353,7 @@
             if (barParam) {
                 const parsed = barParam.split(',').map((entry) => {
                     const [easing, duration] = entry.split(':');
-                    return { easing: EASINGS[easing] ? easing : 'linear', duration: Number(duration) >= 1 ? min(Number(duration), 120) : 10 };
+                    return { easing: EASINGS[easing] ? easing : 'linear', duration: Number(duration) >= 1 ? Math.min(Number(duration), 120) : 10 };
                 });
                 if (parsed.length > 0 && parsed.length <= BAR_COLORS.length) barConfigs = parsed;
             }
@@ -345,7 +403,7 @@
                 durationInput.setAttribute('aria-label', `Duration for bar ${index + 1} in seconds`);
                 durationInput.addEventListener('change', () => {
                     const value = Number(durationInput.value);
-                    config.duration = value >= 1 ? min(value, 120) : 10;
+                    config.duration = value >= 1 ? Math.min(value, 120) : 10;
                     durationInput.value = String(config.duration);
                 });
 
@@ -391,7 +449,9 @@
             experimentRunning = true;
             runButton.textContent = 'Restart';
             statusHost.textContent = '';
-            resizeCanvas(800, layoutHeight());
+            refreshLayout();
+            resizeCanvas(canvasWidth(), layoutHeight());
+            repositionBars();
             if (mode === 'parallel') {
                 bars.forEach((bar) => bar.start());
             } else {
@@ -421,12 +481,21 @@
 
         // ---- p5 control flow ----
         function setup() {
-            const canvas = createCanvas(800, layoutHeight());
+            refreshLayout();
+            const canvas = createCanvas(canvasWidth(), layoutHeight());
             canvas.parent('canvas-host');
             renderBarConfigs();
             noLoop();
             readUrlParams();
             if (!experimentRunning) statusHost.textContent = 'Configure the bars, then press Run all.';
+        }
+
+        function windowResized() {
+            refreshLayout();
+            resizeCanvas(canvasWidth(), layoutHeight());
+            repositionBars();
+            // Repaint immediately when the loop is stopped (between experiments)
+            redraw();
         }
 
         function draw() {

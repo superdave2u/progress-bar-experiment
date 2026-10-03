@@ -25,6 +25,7 @@ The original prototype ran two hardcoded bars once and required a page reload to
   - `easeInQuad` — slow start, fast finish (the "deadline panic" profile)
 - **Per-bar fill rates**: every bar carries its own duration in seconds, so a fast linear bar can race a slow eased one.
 - **Multiple bars side by side, one trigger**: add bar rows with different options and rates, then trigger all of them with the same **Run all** button. The canvas resizes to fit the bars.
+- **Mobile friendly**: the canvas measures the surrounding card and recomputes bar geometry on every resize (including rotation and URL-bar changes), so bars fit any viewport without horizontal scrolling; touch targets get larger tap areas.
 - **Parallel or sequential modes**: parallel renders bars simultaneously (cleanest A/B comparison); sequential runs them one after another (the original behavior).
 - **Restart without reloading**: the same button reruns the experiment; completion is detected and the animation loop stops itself.
 
